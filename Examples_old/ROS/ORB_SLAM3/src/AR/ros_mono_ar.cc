@@ -29,6 +29,7 @@
 #include<opencv2/imgproc/imgproc.hpp>
 
 #include"../../../include/System.h"
+#include"../../../include/Converter.h"
 
 #include"ViewerAR.h"
 
@@ -148,7 +149,8 @@ void ImageGrabber::GrabImage(const sensor_msgs::ImageConstPtr& msg)
     }
     cv::Mat im = cv_ptr->image.clone();
     cv::Mat imu;
-    cv::Mat Tcw = mpSLAM->TrackMonocular(cv_ptr->image,cv_ptr->header.stamp.toSec());
+    Sophus::SE3f Tcw_SE3f = mpSLAM->TrackMonocular(cv_ptr->image,cv_ptr->header.stamp.toSec());
+    cv::Mat Tcw = ORB_SLAM3::Converter::toCvMat(Tcw_SE3f.matrix());
     int state = mpSLAM->GetTrackingState();
     vector<ORB_SLAM3::MapPoint*> vMPs = mpSLAM->GetTrackedMapPoints();
     vector<cv::KeyPoint> vKeys = mpSLAM->GetTrackedKeyPointsUn();
@@ -163,5 +165,4 @@ void ImageGrabber::GrabImage(const sensor_msgs::ImageConstPtr& msg)
         viewerAR.SetImagePose(imu,Tcw,state,vKeys,vMPs);
     }    
 }
-
 
