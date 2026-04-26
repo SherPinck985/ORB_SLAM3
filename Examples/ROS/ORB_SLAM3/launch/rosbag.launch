@@ -1,0 +1,39 @@
+<launch>
+  <!-- 
+  roslaunch ORB_SLAM3 rosbag.launch
+  roslaunch ORB_SLAM3 rosbag.launch pause:=false bag_file:=V1_02_medium.bag
+  roslaunch ORB_SLAM3 rosbag.launch left_dst:=/my_left right_dst:=/my_right imu_dst:=/my_imu
+  -->
+  <!-- bag 文件路径 -->
+  <arg name="bag_file" default="/home/sherpinck_holomz/ORB_SLAM3/Dataset/EuRoC/machine_hall/MH_01_easy/MH_01_easy.bag" />
+
+  <!-- 左目图像话题重映射 -->
+  <arg name="cam0_src" default="/cam0/image_raw" />
+  <arg name="left_dst" default="/camera/left/image_raw" />
+
+  <!-- 右目图像话题重映射 -->
+  <arg name="cam1_src" default="/cam1/image_raw" />
+  <arg name="right_dst" default="/camera/right/image_raw" />
+
+  <!-- IMU 话题重映射 -->
+  <arg name="imu_src" default="/imu0" />
+  <arg name="imu_dst" default="/imu" />
+
+  <arg name="pause" default="true" />
+
+  <group if="$(arg pause)">
+    <node pkg="rosbag"
+          type="play"
+          name="rosbag_play"
+          output="screen"
+          args="--pause $(arg bag_file) $(arg cam0_src):=$(arg left_dst) $(arg cam1_src):=$(arg right_dst) $(arg imu_src):=$(arg imu_dst)" />
+  </group>
+
+  <group unless="$(arg pause)">
+    <node pkg="rosbag"
+          type="play"
+          name="rosbag_play"
+          output="screen"
+          args="$(arg bag_file) $(arg cam0_src):=$(arg left_dst) $(arg cam1_src):=$(arg right_dst) $(arg imu_src):=$(arg imu_dst)" />
+  </group>
+</launch>

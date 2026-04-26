@@ -1,0 +1,26 @@
+<launch> 
+  <!-- 
+  roslaunch ORB_SLAM3 stereo_inertial.launch
+  roslaunch ORB_SLAM3 stereo_inertial.launch do_rectify:=true
+  roslaunch ORB_SLAM3 stereo_inertial.launch voc_file:=Vocabulary/ORBvoc.txt settings_file:=Examples/Stereo-Inertial/EuRoC.yaml do_rectify:=false 
+  -->
+  <!-- 可执行节点名称，对应 rosrun ORB_SLAM3 Stereo_Inertial 中的 Stereo_Inertial -->
+  <arg name="node_type" default="Stereo_Inertial" />
+
+  <!-- ORB 词袋文件路径 -->
+  <arg name="voc_file" default="/home/sherpinck_holomz/ORB_SLAM3/Vocabulary/ORBvoc.txt" />
+
+  <!-- 双目惯性配置文件路径 -->
+  <arg name="settings_file" default="/home/sherpinck_holomz/ORB_SLAM3/Examples/Stereo-Inertial/EuRoC.yaml" />
+
+  <!-- 是否执行双目图像校正，false 表示不做 remap 校正 -->
+  <arg name="do_rectify" default="false" />
+
+  <node pkg="ORB_SLAM3"
+        type="$(arg node_type)"
+        name="stereo_inertial"
+        output="screen"
+        args="$(arg voc_file) $(arg settings_file) $(arg do_rectify)" />
+</launch>
+
+
