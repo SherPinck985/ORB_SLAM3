@@ -207,6 +207,7 @@ int main(int argc, char **argv)
         if(!fsSettings.isOpened())
         {
             cerr << "ERROR: Wrong path to settings" << endl;
+            SLAM.Shutdown();
             return -1;
         }
 
@@ -237,6 +238,7 @@ int main(int argc, char **argv)
                 rows_l==0 || rows_r==0 || cols_l==0 || cols_r==0)
         {
             cerr << "ERROR: Calibration parameters to rectify stereo are missing!" << endl;
+            SLAM.Shutdown();
             return -1;
         }
 
@@ -258,6 +260,18 @@ int main(int argc, char **argv)
 
   // 进入 ROS 事件循环，等待回调触发。
   ros::spin();
+
+  // ros::spin() 返回后，通常表示 ROS 已经开始关闭（例如 Ctrl+C）。
+  // 先等待同步线程退出，避免它在 SLAM.Shutdown() 期间继续调用 TrackStereo。
+  if(sync_thread.joinable())
+    sync_thread.join();
+
+  // 优雅关闭 ORB-SLAM3 内部线程，包括 LocalMapping、LoopClosing 和 Viewer。
+  SLAM.Shutdown();
+
+  // 保存默认 EuRoC 格式轨迹，便于复现实验和后续评估。
+  SLAM.SaveTrajectoryEuRoC("CameraTrajectory.txt");
+  SLAM.SaveKeyFrameTrajectoryEuRoC("KeyFrameTrajectory.txt");
 
   return 0;
 }
@@ -367,7 +381,7 @@ void ImageGrabber::SyncWithImu()
   const double maxTimeDiff = 0.01;
 
   // 持续运行同步线程，不断消费缓冲区中的数据。
-  while(1)
+  while(ros::ok())
   {
     // 保存当前一对同步后的左右图像。
     cv::Mat imLeft, imRight;
@@ -509,4 +523,3 @@ void ImuGrabber::GrabImu(const sensor_msgs::ImuConstPtr &imu_msg)
   mBufMutex.unlock();
   return;
 }
-
