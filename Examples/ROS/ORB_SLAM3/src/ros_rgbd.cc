@@ -31,17 +31,19 @@
 #include<opencv2/core/core.hpp>
 
 #include"../../../include/System.h"
+#include"../include/RvizVisualizer.h"
 
 using namespace std;
 
 class ImageGrabber
 {
 public:
-    ImageGrabber(ORB_SLAM3::System* pSLAM):mpSLAM(pSLAM){}
+    ImageGrabber(ORB_SLAM3::System* pSLAM, ORB_SLAM3::RvizVisualizer* pRviz):mpSLAM(pSLAM), mpRviz(pRviz){}
 
     void GrabRGBD(const sensor_msgs::ImageConstPtr& msgRGB,const sensor_msgs::ImageConstPtr& msgD);
 
     ORB_SLAM3::System* mpSLAM;
+    ORB_SLAM3::RvizVisualizer* mpRviz;
 };
 
 int main(int argc, char **argv)
@@ -59,9 +61,9 @@ int main(int argc, char **argv)
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
     ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::RGBD,true);
 
-    ImageGrabber igb(&SLAM);
-
     ros::NodeHandle nh;
+    ORB_SLAM3::RvizVisualizer rviz(&SLAM, nh, "map", 5);
+    ImageGrabber igb(&SLAM, &rviz);
 
     message_filters::Subscriber<sensor_msgs::Image> rgb_sub(nh, "/camera/rgb/image_raw", 100);
     message_filters::Subscriber<sensor_msgs::Image> depth_sub(nh, "camera/depth_registered/image_raw", 100);
@@ -106,7 +108,10 @@ void ImageGrabber::GrabRGBD(const sensor_msgs::ImageConstPtr& msgRGB,const senso
         ROS_ERROR("cv_bridge exception: %s", e.what());
         return;
     }
-    mpSLAM->TrackRGBD(cv_ptrRGB->image,cv_ptrD->image,cv_ptrRGB->header.stamp.toSec());
+    double tframe = cv_ptrRGB->header.stamp.toSec();
+    Sophus::SE3f Tcw = mpSLAM->TrackRGBD(cv_ptrRGB->image, cv_ptrD->image, tframe);
+    if(mpRviz)
+        mpRviz->PublishAll(Tcw, tframe);
 }
 
 

@@ -65,6 +65,7 @@ ${PROJECT_SOURCE_DIR}/../../../lib/libORB_SLAM3.so
 # Node for monocular camera
 rosbuild_add_executable(Mono
 src/ros_mono.cc
+src/RvizVisualizer.cc
 )
 
 target_link_libraries(Mono
@@ -76,6 +77,7 @@ rosbuild_add_executable(MonoAR
 src/AR/ros_mono_ar.cc
 src/AR/ViewerAR.h
 src/AR/ViewerAR.cc
+src/RvizVisualizer.cc
 )
 
 target_link_libraries(MonoAR
@@ -85,6 +87,7 @@ ${LIBS}
 # Node for stereo camera
 rosbuild_add_executable(Stereo
 src/ros_stereo.cc
+src/RvizVisualizer.cc
 )
 
 target_link_libraries(Stereo
@@ -94,6 +97,7 @@ ${LIBS}
 # Node for RGB-D camera
 rosbuild_add_executable(RGBD
 src/ros_rgbd.cc
+src/RvizVisualizer.cc
 )
 
 target_link_libraries(RGBD
@@ -103,6 +107,7 @@ ${LIBS}
 # Node for monocular-inertial camera
 rosbuild_add_executable(Mono_Inertial
 src/ros_mono_inertial.cc
+src/RvizVisualizer.cc
 )
 
 target_link_libraries(Mono_Inertial
@@ -112,6 +117,7 @@ ${LIBS}
 # Node for stereo-inertial camera
 rosbuild_add_executable(Stereo_Inertial
 src/ros_stereo_inertial.cc
+src/RvizVisualizer.cc
 )
 
 target_link_libraries(Stereo_Inertial

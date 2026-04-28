@@ -33,6 +33,7 @@
 
 #include"../../../include/System.h"
 #include"../include/ImuTypes.h"
+#include"../include/RvizVisualizer.h"
 
 using namespace std;
 
@@ -49,7 +50,7 @@ public:
 class ImageGrabber
 {
 public:
-    ImageGrabber(ORB_SLAM3::System* pSLAM, ImuGrabber *pImuGb, const bool bClahe): mpSLAM(pSLAM), mpImuGb(pImuGb), mbClahe(bClahe){}
+    ImageGrabber(ORB_SLAM3::System* pSLAM, ImuGrabber *pImuGb, ORB_SLAM3::RvizVisualizer *pRviz, const bool bClahe): mpSLAM(pSLAM), mpImuGb(pImuGb), mpRviz(pRviz), mbClahe(bClahe){}
 
     void GrabImage(const sensor_msgs::ImageConstPtr& msg);
     cv::Mat GetImage(const sensor_msgs::ImageConstPtr &img_msg);
@@ -60,6 +61,7 @@ public:
    
     ORB_SLAM3::System* mpSLAM;
     ImuGrabber *mpImuGb;
+    ORB_SLAM3::RvizVisualizer *mpRviz;
 
     const bool mbClahe;
     cv::Ptr<cv::CLAHE> mClahe = cv::createCLAHE(3.0, cv::Size(8, 8));
@@ -91,8 +93,10 @@ int main(int argc, char **argv)
   // Create SLAM system. It initializes all system threads and gets ready to process frames.
   ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::IMU_MONOCULAR,true);
 
+  ORB_SLAM3::RvizVisualizer rviz(&SLAM, n, "map", 5);
+
   ImuGrabber imugb;
-  ImageGrabber igb(&SLAM,&imugb,bEqual); // TODO
+  ImageGrabber igb(&SLAM,&imugb,&rviz,bEqual);
   
   // Maximum delay, 5 seconds
   ros::Subscriber sub_imu = n.subscribe("/imu", 1000, &ImuGrabber::GrabImu, &imugb); 
@@ -101,6 +105,13 @@ int main(int argc, char **argv)
   std::thread sync_thread(&ImageGrabber::SyncWithImu,&igb);
 
   ros::spin();
+
+  if(sync_thread.joinable())
+    sync_thread.join();
+
+  SLAM.Shutdown();
+  SLAM.SaveTrajectoryEuRoC("CameraTrajectory.txt");
+  SLAM.SaveKeyFrameTrajectoryEuRoC("KeyFrameTrajectory.txt");
 
   return 0;
 }
@@ -140,7 +151,7 @@ cv::Mat ImageGrabber::GetImage(const sensor_msgs::ImageConstPtr &img_msg)
 
 void ImageGrabber::SyncWithImu()
 {
-  while(1)
+  while(ros::ok())
   {
     cv::Mat im;
     double tIm = 0;
@@ -175,7 +186,9 @@ void ImageGrabber::SyncWithImu()
       if(mbClahe)
         mClahe->apply(im,im);
 
-      mpSLAM->TrackMonocular(im,tIm,vImuMeas);
+      Sophus::SE3f Tcw = mpSLAM->TrackMonocular(im, tIm, vImuMeas);
+      if(mpRviz)
+        mpRviz->PublishAll(Tcw, tIm);
     }
 
     std::chrono::milliseconds tSleep(1);

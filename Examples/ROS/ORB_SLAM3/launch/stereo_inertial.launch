@@ -1,39 +1,63 @@
-<launch> 
-  <!-- 
-  roslaunch ORB_SLAM3 stereo_inertial.launch
-  roslaunch ORB_SLAM3 stereo_inertial.launch do_rectify:=true
-  roslaunch ORB_SLAM3 stereo_inertial.launch launch_rviz:=false
-  roslaunch ORB_SLAM3 stereo_inertial.launch rviz_config:=/path/to/custom.rviz
-  roslaunch ORB_SLAM3 stereo_inertial.launch voc_file:=Vocabulary/ORBvoc.txt settings_file:=Examples/Stereo-Inertial/EuRoC.yaml do_rectify:=false 
+<launch>
+  <!--
+  1. 默认启动 Stereo-Inertial + RViz
+     roslaunch ORB_SLAM3 stereo_inertial.launch
+  2. 启用双目图像校正
+     roslaunch ORB_SLAM3 stereo_inertial.launch do_rectify:=true
+  3. 不启动 RViz
+     roslaunch ORB_SLAM3 stereo_inertial.launch launch_rviz:=false
+  4. 使用自定义 RViz 配置
+     roslaunch ORB_SLAM3 stereo_inertial.launch rviz_config:=/path/to/custom.rviz
+  5. 使用自定义话题
+     roslaunch ORB_SLAM3 stereo_inertial.launch \
+       left_image_topic:=/camera/left/image_raw \
+       right_image_topic:=/camera/right/image_raw \
+       imu_topic:=/imu
+   6.实时相机
+      roslaunch ORB_SLAM3 stereo_inertial.launch use_sim_time:=false
   -->
-  <!-- 可执行节点名称，对应 rosrun ORB_SLAM3 Stereo_Inertial 中的 Stereo_Inertial -->
-  <arg name="node_type" default="Stereo_Inertial" />
 
+  <!-- 可执行文件名称，对应 rosrun ORB_SLAM3 Stereo_Inertial -->
+  <arg name="node_type" default="Stereo_Inertial" />
+  <!-- ROS 节点名 -->
+  <arg name="node_name" default="stereo_inertial" />
   <!-- ORB 词袋文件路径 -->
   <arg name="voc_file" default="/home/sherpinck_holomz/ORB_SLAM3/Vocabulary/ORBvoc.txt" />
-
   <!-- 双目惯性配置文件路径 -->
   <arg name="settings_file" default="/home/sherpinck_holomz/ORB_SLAM3/Examples/Stereo-Inertial/EuRoC.yaml" />
-
-  <!-- 是否执行双目图像校正，false 表示不做 remap 校正 -->
+  <!-- 是否执行双目图像校正：true / false -->
   <arg name="do_rectify" default="false" />
-
-  <!-- 是否随 launch 启动 RViz -->
+  <!-- 是否执行 CLAHE 图像增强：true / false -->
+  <arg name="do_equalize" default="false" />
+  <!-- 使用 rosbag 播放数据时建议为 true -->
+  <arg name="use_sim_time" default="true" />
+  <param name="/use_sim_time" value="$(arg use_sim_time)" />
+  <!-- 输入话题参数 -->
+  <arg name="left_image_topic" default="/camera/left/image_raw" />
+  <arg name="right_image_topic" default="/camera/right/image_raw" />
+  <arg name="imu_topic" default="/imu" />
+  <!-- RViz 参数 -->
   <arg name="launch_rviz" default="true" />
-
-  <!-- RViz 配置文件路径，可在 roslaunch 时覆盖 -->
   <arg name="rviz_config" default="$(find ORB_SLAM3)/rviz/default.rviz" />
 
+  <!-- ORB-SLAM3 节点 -->
   <node pkg="ORB_SLAM3"
         type="$(arg node_type)"
-        name="stereo_inertial"
+        name="$(arg node_name)"
         output="screen"
-        args="$(arg voc_file) $(arg settings_file) $(arg do_rectify)" />
+        args="$(arg voc_file) $(arg settings_file) $(arg do_rectify) $(arg do_equalize)">
 
+    <remap from="/camera/left/image_raw" to="$(arg left_image_topic)" />
+    <remap from="/camera/right/image_raw" to="$(arg right_image_topic)" />
+    <remap from="/imu" to="$(arg imu_topic)" />
+  </node>
+
+  <!-- RViz 节点 -->
   <node pkg="rviz"
         type="rviz"
         name="rviz"
+        output="screen"
         args="-d $(arg rviz_config)"
         if="$(arg launch_rviz)" />
-</launch>
 
+</launch>

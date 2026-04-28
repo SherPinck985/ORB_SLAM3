@@ -28,17 +28,19 @@
 #include<opencv2/core/core.hpp>
 
 #include"../../../include/System.h"
+#include"../include/RvizVisualizer.h"
 
 using namespace std;
 
 class ImageGrabber
 {
 public:
-    ImageGrabber(ORB_SLAM3::System* pSLAM):mpSLAM(pSLAM){}
+    ImageGrabber(ORB_SLAM3::System* pSLAM, ORB_SLAM3::RvizVisualizer* pRviz):mpSLAM(pSLAM), mpRviz(pRviz){}
 
     void GrabImage(const sensor_msgs::ImageConstPtr& msg);
 
     ORB_SLAM3::System* mpSLAM;
+    ORB_SLAM3::RvizVisualizer* mpRviz;
 };
 
 int main(int argc, char **argv)
@@ -56,9 +58,9 @@ int main(int argc, char **argv)
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
     ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::MONOCULAR,true);
 
-    ImageGrabber igb(&SLAM);
-
     ros::NodeHandle nodeHandler;
+    ORB_SLAM3::RvizVisualizer rviz(&SLAM, nodeHandler, "map", 5);
+    ImageGrabber igb(&SLAM, &rviz);
     ros::Subscriber sub = nodeHandler.subscribe("/camera/image_raw", 1, &ImageGrabber::GrabImage,&igb);
 
     ros::spin();
@@ -88,7 +90,10 @@ void ImageGrabber::GrabImage(const sensor_msgs::ImageConstPtr& msg)
         return;
     }
 
-    mpSLAM->TrackMonocular(cv_ptr->image,cv_ptr->header.stamp.toSec());
+    double tframe = cv_ptr->header.stamp.toSec();
+    Sophus::SE3f Tcw = mpSLAM->TrackMonocular(cv_ptr->image, tframe);
+    if(mpRviz)
+        mpRviz->PublishAll(Tcw, tframe);
 }
 
 

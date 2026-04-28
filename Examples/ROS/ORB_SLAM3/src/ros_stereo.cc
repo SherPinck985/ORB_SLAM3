@@ -31,17 +31,19 @@
 #include<opencv2/core/core.hpp>
 
 #include"../../../include/System.h"
+#include"../include/RvizVisualizer.h"
 
 using namespace std;
 
 class ImageGrabber
 {
 public:
-    ImageGrabber(ORB_SLAM3::System* pSLAM):mpSLAM(pSLAM){}
+    ImageGrabber(ORB_SLAM3::System* pSLAM, ORB_SLAM3::RvizVisualizer* pRviz):mpSLAM(pSLAM), mpRviz(pRviz){}
 
     void GrabStereo(const sensor_msgs::ImageConstPtr& msgLeft,const sensor_msgs::ImageConstPtr& msgRight);
 
     ORB_SLAM3::System* mpSLAM;
+    ORB_SLAM3::RvizVisualizer* mpRviz;
     bool do_rectify;
     cv::Mat M1l,M2l,M1r,M2r;
 };
@@ -61,7 +63,9 @@ int main(int argc, char **argv)
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
     ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::STEREO,true);
 
-    ImageGrabber igb(&SLAM);
+    ros::NodeHandle nh;
+    ORB_SLAM3::RvizVisualizer rviz(&SLAM, nh, "map", 5);
+    ImageGrabber igb(&SLAM, &rviz);
 
     stringstream ss(argv[3]);
 	ss >> boolalpha >> igb.do_rectify;
@@ -104,8 +108,6 @@ int main(int argc, char **argv)
         cv::initUndistortRectifyMap(K_l,D_l,R_l,P_l.rowRange(0,3).colRange(0,3),cv::Size(cols_l,rows_l),CV_32F,igb.M1l,igb.M2l);
         cv::initUndistortRectifyMap(K_r,D_r,R_r,P_r.rowRange(0,3).colRange(0,3),cv::Size(cols_r,rows_r),CV_32F,igb.M1r,igb.M2r);
     }
-
-    ros::NodeHandle nh;
 
     message_filters::Subscriber<sensor_msgs::Image> left_sub(nh, "/camera/left/image_raw", 1);
     message_filters::Subscriber<sensor_msgs::Image> right_sub(nh, "/camera/right/image_raw", 1);
@@ -158,11 +160,17 @@ void ImageGrabber::GrabStereo(const sensor_msgs::ImageConstPtr& msgLeft,const se
         cv::Mat imLeft, imRight;
         cv::remap(cv_ptrLeft->image,imLeft,M1l,M2l,cv::INTER_LINEAR);
         cv::remap(cv_ptrRight->image,imRight,M1r,M2r,cv::INTER_LINEAR);
-        mpSLAM->TrackStereo(imLeft,imRight,cv_ptrLeft->header.stamp.toSec());
+        double tframe = cv_ptrLeft->header.stamp.toSec();
+        Sophus::SE3f Tcw = mpSLAM->TrackStereo(imLeft, imRight, tframe);
+        if(mpRviz)
+            mpRviz->PublishAll(Tcw, tframe);
     }
     else
     {
-        mpSLAM->TrackStereo(cv_ptrLeft->image,cv_ptrRight->image,cv_ptrLeft->header.stamp.toSec());
+        double tframe = cv_ptrLeft->header.stamp.toSec();
+        Sophus::SE3f Tcw = mpSLAM->TrackStereo(cv_ptrLeft->image, cv_ptrRight->image, tframe);
+        if(mpRviz)
+            mpRviz->PublishAll(Tcw, tframe);
     }
 
 }
