@@ -1330,6 +1330,60 @@ vector<MapPoint*> System::GetTrackedMapPoints()
     return mTrackedMapPoints;
 }
 
+vector<MapPoint*> System::GetAllMapPoints()
+{
+    if(!mpAtlas)
+        return vector<MapPoint*>();
+
+    return mpAtlas->GetAllMapPoints();
+}
+
+vector<MapPoint*> System::GetActiveMapPoints()
+{
+    if(!mpAtlas)
+        return vector<MapPoint*>();
+
+    return mpAtlas->GetAllMapPoints();
+}
+
+vector<MapPoint*> System::GetHistoricalMapPoints()
+{
+    vector<MapPoint*> vHistory;
+
+    if(!mpAtlas)
+        return vHistory;
+
+    Map* pCurrentMap = mpAtlas->GetCurrentMap();
+    vector<Map*> vpMaps = mpAtlas->GetAllMaps();
+
+    for(Map* pMap : vpMaps)
+    {
+        if(!pMap || pMap == pCurrentMap || pMap->IsBad())
+            continue;
+
+        vector<MapPoint*> vpMPs = pMap->GetAllMapPoints();
+        vHistory.insert(vHistory.end(), vpMPs.begin(), vpMPs.end());
+    }
+
+    return vHistory;
+}
+
+vector<MapPoint*> System::GetReferenceMapPoints()
+{
+    if(!mpAtlas)
+        return vector<MapPoint*>();
+
+    return mpAtlas->GetReferenceMapPoints();
+}
+
+vector<MapPoint*> System::GetLocalMapPoints()
+{
+    if(!mpTracker)
+        return vector<MapPoint*>();
+
+    return mpTracker->GetLocalMapMPS();
+}
+
 vector<cv::KeyPoint> System::GetTrackedKeyPointsUn()
 {
     unique_lock<mutex> lock(mMutexState);

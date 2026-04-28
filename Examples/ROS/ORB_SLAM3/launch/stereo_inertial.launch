@@ -2,6 +2,8 @@
   <!-- 
   roslaunch ORB_SLAM3 stereo_inertial.launch
   roslaunch ORB_SLAM3 stereo_inertial.launch do_rectify:=true
+  roslaunch ORB_SLAM3 stereo_inertial.launch launch_rviz:=false
+  roslaunch ORB_SLAM3 stereo_inertial.launch rviz_config:=/path/to/custom.rviz
   roslaunch ORB_SLAM3 stereo_inertial.launch voc_file:=Vocabulary/ORBvoc.txt settings_file:=Examples/Stereo-Inertial/EuRoC.yaml do_rectify:=false 
   -->
   <!-- 可执行节点名称，对应 rosrun ORB_SLAM3 Stereo_Inertial 中的 Stereo_Inertial -->
@@ -16,11 +18,22 @@
   <!-- 是否执行双目图像校正，false 表示不做 remap 校正 -->
   <arg name="do_rectify" default="false" />
 
+  <!-- 是否随 launch 启动 RViz -->
+  <arg name="launch_rviz" default="true" />
+
+  <!-- RViz 配置文件路径，可在 roslaunch 时覆盖 -->
+  <arg name="rviz_config" default="$(find ORB_SLAM3)/rviz/default.rviz" />
+
   <node pkg="ORB_SLAM3"
         type="$(arg node_type)"
         name="stereo_inertial"
         output="screen"
         args="$(arg voc_file) $(arg settings_file) $(arg do_rectify)" />
-</launch>
 
+  <node pkg="rviz"
+        type="rviz"
+        name="rviz"
+        args="-d $(arg rviz_config)"
+        if="$(arg launch_rviz)" />
+</launch>
 
