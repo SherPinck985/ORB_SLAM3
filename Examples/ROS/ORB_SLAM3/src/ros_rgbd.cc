@@ -62,7 +62,7 @@ int main(int argc, char **argv)
     ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::RGBD,true);
 
     ros::NodeHandle nh;
-    ORB_SLAM3::RvizVisualizer rviz(&SLAM, nh, "map", 5);
+    ORB_SLAM3::RvizVisualizer rviz(&SLAM, nh, ORB_SLAM3::System::GetWorldFrameId(), 5);
     ImageGrabber igb(&SLAM, &rviz);
 
     message_filters::Subscriber<sensor_msgs::Image> rgb_sub(nh, "/camera/rgb/image_raw", 100);
@@ -113,5 +113,4 @@ void ImageGrabber::GrabRGBD(const sensor_msgs::ImageConstPtr& msgRGB,const senso
     if(mpRviz)
         mpRviz->PublishAll(Tcw, tframe);
 }
-
 

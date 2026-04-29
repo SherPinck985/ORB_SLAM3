@@ -8,6 +8,7 @@
 #include "../include/RvizVisualizer.h"
 
 #include <sensor_msgs/point_cloud2_iterator.h>
+#include <geometry_msgs/Point.h>
 
 namespace ORB_SLAM3
 {
@@ -25,6 +26,7 @@ RvizVisualizer::RvizVisualizer(System* pSLAM,
 {
     mPubPose = nh.advertise<geometry_msgs::PoseStamped>(Topic("camera_pose"), 10);
     mPubPath = nh.advertise<nav_msgs::Path>(Topic("camera_path"), 10);
+    mPubRobotAxes = nh.advertise<visualization_msgs::MarkerArray>(Topic("camera_axes"), 10);
 
     mPubActiveMapPoints =
         nh.advertise<sensor_msgs::PointCloud2>(Topic("map_active_points"), 2);
@@ -91,10 +93,72 @@ void RvizVisualizer::PublishPoseAndPath(const Sophus::SE3f& Tcw, double timestam
     poseMsg.pose.orientation.w = q.w();
 
     mPubPose.publish(poseMsg);
+    PublishRobotAxes(Twc, timestamp);
 
     mPathMsg.header.stamp = poseMsg.header.stamp;
     mPathMsg.poses.push_back(poseMsg);
     mPubPath.publish(mPathMsg);
+}
+
+visualization_msgs::Marker RvizVisualizer::CreateAxisMarker(int id,
+                                                            const ros::Time& stamp,
+                                                            const Eigen::Vector3f& origin,
+                                                            const Eigen::Vector3f& direction,
+                                                            float r,
+                                                            float g,
+                                                            float b) const
+{
+    visualization_msgs::Marker marker;
+    marker.header.stamp = stamp;
+    marker.header.frame_id = mWorldFrameId;
+    marker.ns = "robot_axes";
+    marker.id = id;
+    marker.type = visualization_msgs::Marker::ARROW;
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.pose.orientation.w = 1.0;
+
+    geometry_msgs::Point start;
+    start.x = origin.x();
+    start.y = origin.y();
+    start.z = origin.z();
+
+    geometry_msgs::Point end;
+    end.x = origin.x() + direction.x();
+    end.y = origin.y() + direction.y();
+    end.z = origin.z() + direction.z();
+
+    marker.points.push_back(start);
+    marker.points.push_back(end);
+
+    marker.scale.x = 0.03;  // shaft diameter
+    marker.scale.y = 0.08;  // head diameter
+    marker.scale.z = 0.12;  // head length
+
+    marker.color.r = r;
+    marker.color.g = g;
+    marker.color.b = b;
+    marker.color.a = 1.0;
+    marker.lifetime = ros::Duration(0.0);
+
+    return marker;
+}
+
+void RvizVisualizer::PublishRobotAxes(const Sophus::SE3f& Twc, double timestamp)
+{
+    if(mPubRobotAxes.getNumSubscribers() == 0)
+        return;
+
+    const ros::Time stamp(timestamp);
+    const Eigen::Vector3f origin = Twc.translation();
+    const Eigen::Matrix3f Rwc = Twc.rotationMatrix();
+    const float axisLength = 0.35f;
+
+    visualization_msgs::MarkerArray axes;
+    axes.markers.push_back(CreateAxisMarker(0, stamp, origin, Rwc.col(0) * axisLength, 1.0f, 0.0f, 0.0f));
+    axes.markers.push_back(CreateAxisMarker(1, stamp, origin, Rwc.col(1) * axisLength, 0.0f, 1.0f, 0.0f));
+    axes.markers.push_back(CreateAxisMarker(2, stamp, origin, Rwc.col(2) * axisLength, 0.0f, 0.2f, 1.0f));
+
+    mPubRobotAxes.publish(axes);
 }
 
 bool RvizVisualizer::HasAnyMapSubscriber() const

@@ -16,6 +16,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <nav_msgs/Path.h>
 #include <sensor_msgs/PointCloud2.h>
+#include <visualization_msgs/MarkerArray.h>
 
 #include "../../../include/System.h"
 #include "../../../include/MapPoint.h"
@@ -30,13 +31,13 @@ public:
      * @brief 构造通用 RViz 可视化器。
      * @param pSLAM ORB-SLAM3 System 指针。
      * @param nh ROS NodeHandle，用于创建 publisher。
-     * @param worldFrame RViz Fixed Frame，默认 map。
+     * @param worldFrame RViz Fixed Frame，默认 world。
      * @param pointCloudStride 点云发布降频步长，默认每 5 帧发布一次。
      * @param topicPrefix RViz 调试 topic 前缀，默认 /orb_slam3。
      */
     RvizVisualizer(System* pSLAM,
                    ros::NodeHandle& nh,
-                   const std::string& worldFrame = "map",
+                   const std::string& worldFrame = System::GetWorldFrameId(),
                    int pointCloudStride = 5,
                    const std::string& topicPrefix = "/orb_slam3");
 
@@ -72,6 +73,14 @@ private:
                                      uint8_t r,
                                      uint8_t g,
                                      uint8_t b);
+    void PublishRobotAxes(const Sophus::SE3f& Twc, double timestamp);
+    visualization_msgs::Marker CreateAxisMarker(int id,
+                                                const ros::Time& stamp,
+                                                const Eigen::Vector3f& origin,
+                                                const Eigen::Vector3f& direction,
+                                                float r,
+                                                float g,
+                                                float b) const;
 
     bool HasAnyMapSubscriber() const;
     bool HasValidTracking() const;
@@ -84,6 +93,7 @@ private:
 
     ros::Publisher mPubPose;
     ros::Publisher mPubPath;
+    ros::Publisher mPubRobotAxes;
 
     ros::Publisher mPubActiveMapPoints;
     ros::Publisher mPubHistoricalMapPoints;

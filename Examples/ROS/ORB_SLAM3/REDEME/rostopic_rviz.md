@@ -778,7 +778,7 @@ float32 tracking_time_ms
 建议你在 RViz 中固定坐标系设置为：
 
 ```text id="9nzozl"
-Fixed Frame: map
+Fixed Frame: world
 ```
 
 然后添加：

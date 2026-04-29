@@ -93,7 +93,7 @@ int main(int argc, char **argv)
   // Create SLAM system. It initializes all system threads and gets ready to process frames.
   ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::IMU_MONOCULAR,true);
 
-  ORB_SLAM3::RvizVisualizer rviz(&SLAM, n, "map", 5);
+  ORB_SLAM3::RvizVisualizer rviz(&SLAM, n, ORB_SLAM3::System::GetWorldFrameId(), 5);
 
   ImuGrabber imugb;
   ImageGrabber igb(&SLAM,&imugb,&rviz,bEqual);
@@ -203,5 +203,4 @@ void ImuGrabber::GrabImu(const sensor_msgs::ImuConstPtr &imu_msg)
   mBufMutex.unlock();
   return;
 }
-
 

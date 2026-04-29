@@ -207,8 +207,8 @@ int main(int argc, char **argv)
   // 最后一个 true 表示启用可视化相关线程
   ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::IMU_STEREO,true);
 
-  // 创建通用 RViz 可视化器。其它 mono / stereo / mono-inertial 入口也可以复用这个类。
-  ORB_SLAM3::RvizVisualizer rviz(&SLAM, n, "map", 5);
+  // 创建通用 RViz 可视化器。Fixed Frame 统一使用 world。
+  ORB_SLAM3::RvizVisualizer rviz(&SLAM, n, ORB_SLAM3::System::GetWorldFrameId(), 5);
 
   // 创建 IMU 接收器和图像接收/同步器。
   ImuGrabber imugb;

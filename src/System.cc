@@ -566,6 +566,12 @@ bool System::isShutDown() {
     return mbShutDown;
 }
 
+const std::string& System::GetWorldFrameId()
+{
+    static const std::string worldFrameId = "world";
+    return worldFrameId;
+}
+
 void System::SaveTrajectoryTUM(const string &filename)
 {
     cout << endl << "Saving camera trajectory to " << filename << " ..." << endl;
@@ -1600,4 +1606,3 @@ string System::CalculateCheckSum(string filename, int type)
 }
 
 } //namespace ORB_SLAM
-

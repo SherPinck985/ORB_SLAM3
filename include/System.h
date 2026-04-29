@@ -173,6 +173,8 @@ public:
 
     // Information from most recent processed frame
     // You can call this right after TrackMonocular (or stereo or RGBD)
+    static const std::string& GetWorldFrameId();
+
     int GetTrackingState();
     std::vector<MapPoint*> GetTrackedMapPoints();
     std::vector<cv::KeyPoint> GetTrackedKeyPointsUn();

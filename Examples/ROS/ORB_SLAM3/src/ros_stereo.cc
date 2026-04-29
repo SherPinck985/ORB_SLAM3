@@ -64,7 +64,7 @@ int main(int argc, char **argv)
     ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::STEREO,true);
 
     ros::NodeHandle nh;
-    ORB_SLAM3::RvizVisualizer rviz(&SLAM, nh, "map", 5);
+    ORB_SLAM3::RvizVisualizer rviz(&SLAM, nh, ORB_SLAM3::System::GetWorldFrameId(), 5);
     ImageGrabber igb(&SLAM, &rviz);
 
     stringstream ss(argv[3]);
@@ -174,5 +174,4 @@ void ImageGrabber::GrabStereo(const sensor_msgs::ImageConstPtr& msgLeft,const se
     }
 
 }
-
 

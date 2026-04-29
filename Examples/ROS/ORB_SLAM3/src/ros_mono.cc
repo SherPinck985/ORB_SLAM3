@@ -59,7 +59,7 @@ int main(int argc, char **argv)
     ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::MONOCULAR,true);
 
     ros::NodeHandle nodeHandler;
-    ORB_SLAM3::RvizVisualizer rviz(&SLAM, nodeHandler, "map", 5);
+    ORB_SLAM3::RvizVisualizer rviz(&SLAM, nodeHandler, ORB_SLAM3::System::GetWorldFrameId(), 5);
     ImageGrabber igb(&SLAM, &rviz);
     ros::Subscriber sub = nodeHandler.subscribe("/camera/image_raw", 1, &ImageGrabber::GrabImage,&igb);
 
@@ -95,5 +95,4 @@ void ImageGrabber::GrabImage(const sensor_msgs::ImageConstPtr& msg)
     if(mpRviz)
         mpRviz->PublishAll(Tcw, tframe);
 }
-
 
