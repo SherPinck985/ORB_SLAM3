@@ -1,0 +1,58 @@
+<launch>
+  <!--
+    D435i + ORB-SLAM3 Stereo
+
+    roslaunch realsense2_camera d435i_stereo.launch
+    输入：
+      /camera/infra1/image_rect_raw
+      /camera/infra2/image_rect_raw
+
+    注意：
+      这里不用 IMU
+      这里不用 Stereo_Inertial
+      这里使用 Stereo 节点
+  -->
+
+  <!-- ORB-SLAM3 Stereo 节点 -->
+  <arg name="node_type" default="Stereo" />
+  <arg name="node_name" default="stereo" />
+
+  <!-- ORB 词袋文件 -->
+  <arg name="voc_file" default="/home/sherpinck_holomz/ORB_SLAM3/Vocabulary/ORBvoc.txt" />
+
+  <!-- D435i 双目配置文件 -->
+  <arg name="settings_file" default="/home/sherpinck_holomz/ORB_SLAM3/Examples/Stereo/RealSense_D435i_exp.yaml" />
+
+  <!-- 使用 image_rect_raw，所以不需要 ORB-SLAM3 在线校正 -->
+  <arg name="do_rectify" default="false" />
+
+  <!-- 实时相机必须 false；rosbag 才是 true -->
+  <arg name="use_sim_time" default="false" />
+  <param name="/use_sim_time" value="$(arg use_sim_time)" />
+
+  <!-- D435i 红外双目话题 -->
+  <arg name="left_image_topic" default="/camera/infra1/image_rect_raw" />
+  <arg name="right_image_topic" default="/camera/infra2/image_rect_raw" />
+
+  <!-- 可选 RViz -->
+  <arg name="launch_rviz" default="false" />
+  <arg name="rviz_config" default="$(find ORB_SLAM3)/rviz/default.rviz" />
+
+  <node pkg="ORB_SLAM3"
+        type="$(arg node_type)"
+        name="$(arg node_name)"
+        output="screen"
+        args="$(arg voc_file) $(arg settings_file) $(arg do_rectify)">
+
+    <!-- ORB-SLAM3 Stereo 默认订阅 /camera/left/image_raw 和 /camera/right/image_raw -->
+    <remap from="/camera/left/image_raw" to="$(arg left_image_topic)" />
+    <remap from="/camera/right/image_raw" to="$(arg right_image_topic)" />
+  </node>
+
+  <node pkg="rviz"
+        type="rviz"
+        name="rviz"
+        output="screen"
+        args="-d $(arg rviz_config)"
+        if="$(arg launch_rviz)" />
+</launch>

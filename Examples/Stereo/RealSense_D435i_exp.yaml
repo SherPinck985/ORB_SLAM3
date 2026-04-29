@@ -1,0 +1,108 @@
+%YAML:1.0
+
+File.version: "1.0"
+
+#--------------------------------------------------------------------------------------------
+# Camera Parameters
+# D435i infrared stereo, 640x480@30Hz
+# left  = /camera/infra1/image_rect_raw
+# right = /camera/infra2/image_rect_raw
+#--------------------------------------------------------------------------------------------
+
+Camera.type: "PinHole"
+
+# Left camera: infra1
+Camera1.fx: 384.316
+Camera1.fy: 384.316
+Camera1.cx: 319.056
+Camera1.cy: 237.079
+
+# Right camera: infra2
+Camera2.fx: 384.316
+Camera2.fy: 384.316
+Camera2.cx: 319.056
+Camera2.cy: 237.079
+
+# Distortion parameters.
+# We use image_rect_raw, so distortion is already removed.
+Camera1.k1: 0.0
+Camera1.k2: 0.0
+Camera1.p1: 0.0
+Camera1.p2: 0.0
+Camera1.k3: 0.0
+
+Camera2.k1: 0.0
+Camera2.k2: 0.0
+Camera2.p1: 0.0
+Camera2.p2: 0.0
+Camera2.k3: 0.0
+
+Camera.width: 640
+Camera.height: 480
+Camera.fps: 30
+
+# Infrared images are grayscale
+Camera.RGB: 0
+
+#--------------------------------------------------------------------------------------------
+# Stereo Parameters
+#--------------------------------------------------------------------------------------------
+
+# Transformation from camera 1 (infra1 / left) to camera 2 (infra2 / right)
+Stereo.T_c1_c2: !!opencv-matrix
+   rows: 4
+   cols: 4
+   dt: f
+   data: [1.0, 0.0, 0.0, -0.049883589,
+          0.0, 1.0, 0.0,  0.0,
+          0.0, 0.0, 1.0,  0.0,
+          0.0, 0.0, 0.0,  1.0]
+
+# Baseline, meters
+Stereo.b: 0.049883589
+
+# bf = baseline * fx = 0.049883589 * 384.316 ≈ 19.17
+Camera.bf: 19.17
+
+# Far/close threshold
+Stereo.ThDepth: 35.0
+ThDepth: 35.0
+
+#--------------------------------------------------------------------------------------------
+# ORB Parameters
+#--------------------------------------------------------------------------------------------
+
+ORBextractor.nFeatures: 1500
+ORBextractor.scaleFactor: 1.2
+ORBextractor.nLevels: 8
+ORBextractor.iniThFAST: 20
+ORBextractor.minThFAST: 7
+
+#--------------------------------------------------------------------------------------------
+# Viewer Parameters
+#--------------------------------------------------------------------------------------------
+
+Viewer.KeyFrameSize: 0.05
+Viewer.KeyFrameLineWidth: 1.0
+Viewer.GraphLineWidth: 0.9
+Viewer.PointSize: 2.0
+Viewer.CameraSize: 0.08
+Viewer.CameraLineWidth: 3.0
+Viewer.ViewpointX: 0.0
+Viewer.ViewpointY: -0.7
+Viewer.ViewpointZ: -1.8
+Viewer.ViewpointF: 500.0
+Viewer.imageViewScale: 1.0
+
+#--------------------------------------------------------------------------------------------
+# Atlas Parameters
+#--------------------------------------------------------------------------------------------
+
+System.LoadAtlasFromFile: ""
+System.SaveAtlasToFile: ""
+
+#--------------------------------------------------------------------------------------------
+# Other Parameters
+#--------------------------------------------------------------------------------------------
+
+System.thFarPoints: 100.0
